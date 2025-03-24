@@ -26,7 +26,7 @@ This script calculates ReplayGain for MP3 files organized in an ARTIST/ALBUM/CD 
    - Open the script in a text editor.
    - Set the `base_dir` variable to the path where your ARTIST folders are located:
      ```bash
-     base_dir="/path/to/your/music/library/"
+     base_dir="/media/path/to/your/Music/processing/directory/"
      ```
 2. **Run the Script**:
    ```bash

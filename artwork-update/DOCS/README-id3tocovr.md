@@ -51,7 +51,7 @@ This script automates the process of fetching album artwork for music files stor
    NO_LOW_RES = False
 
    [paths]
-   rootmusicdir = /path/to/your/music/library
+   rootmusicdir = /media/path/to/your/Music/processing/directory/
    ```
    Replace the placeholders with your actual email, Last.fm API key, and music library path.
 

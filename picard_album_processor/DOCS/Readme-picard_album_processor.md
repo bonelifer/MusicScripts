@@ -33,8 +33,8 @@ The **Picard Album Processor** is a Bash script designed to automate the process
 4. **Update Folder Paths**:
    Open the script in a text editor and update the following variables to match your directory structure:
    ```bash
-   music_directory="/home/username/MusicToOrganize/"  # Replace with your music source directory
-   output_directory="/home/username/MusicToOrganize/Picard/""  # Replace with your output directory
+   music_directory="/media/path/to/your/Music/processing/directory/"  # Replace with your music source directory
+   output_directory="/media/path/to/your/Music/processing/directory/Picard/""  # Replace with your output directory
    failed_directory="$music_directory/Failed"  # Leave as is
    ```
 

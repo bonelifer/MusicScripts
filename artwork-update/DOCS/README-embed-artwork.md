@@ -30,12 +30,12 @@ This script automates the process of embedding and checking the resolution of al
    Rename the file `artwork-config.ini.example` to `artwork-config.ini` in the same directory as the script and adjust the following content:
    ```ini
    [paths]
-   rootmusicdir = /path/to/your/music/library
+   rootmusicdir = /media/path/to/your/Music/processing/directory/
 
    [cover_art_script]
    TEMP_RES = 600
    ```
-   Replace `/path/to/your/music/library` with the actual path to your music library.
+   Replace `/media/path/to/your/Music/processing/directory/` with the actual path to your music library.
 
 ## Usage
 The script can be run with the following command-line arguments:
