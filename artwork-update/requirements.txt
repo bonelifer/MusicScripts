@@ -1,0 +1,6 @@
+mutagen==1.46.0
+itunespy==1.6.0
+musicbrainzngs==0.7.1
+pylast==5.1.0
+requests==2.31.0
+Pillow==10.1.0

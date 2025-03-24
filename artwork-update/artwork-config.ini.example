@@ -1,0 +1,19 @@
+[musicbrainz]
+useragent_email = yourname@gmail.com
+
+[credentials]
+lastfm-apikey = lastFMApiKey
+
+[settings]
+USE_HIRES = True
+MIN_RES = 500
+USE_FALLBACK = True
+USE_HIRES_PRIORITY = True
+USE_MUSICBRAINZ = True
+NO_LOW_RES = False
+
+[paths]
+rootmusicdir = /home/username/MusicToOrganize/
+
+[cover_art_script]
+TEMP_RES = 600
