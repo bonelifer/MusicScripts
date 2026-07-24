@@ -8,7 +8,7 @@ This project consists of a collection of scripts designed to automate various ta
 | Filename                  | Description                                                                 |
 |---------------------------|-----------------------------------------------------------------------------|
 | [Artwork Update Scripts](./artwork-update/README.md) | Fetches, resizes, compresses, and cleans up album cover art from multiple sources, plus ReplayGain and MP3 validation. See that folder's README for the full script list. |
-| [Picard Album Processor](./picard_album_processor/DOCS/Readme-picard_album_processor.md)                   | Automates the processing of music albums using Picard, tracks failures, and restarts Picard if necessary. |
+| [Picard Album Processor](./picard_album_processor/DOCS/README-picard_album_processor.md)                   | Automates the processing of music albums using Picard, tracks failures, and restarts Picard if necessary. |
 
 ### Instructions:
 To run the scripts in the correct order for updating artwork, use the `run.sh` file. For processing albums with Picard, use the `picard_album_processor.sh` script.

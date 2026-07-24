@@ -1,0 +1,6 @@
+[paths]
+music_directory = /home/username/MusicToOrganize/
+output_directory = /home/username/MusicToOrganize/Picard/
+
+# Optional. Defaults to "<music_directory>/Failed" if left unset.
+#failed_directory = /home/username/MusicToOrganize/Failed/

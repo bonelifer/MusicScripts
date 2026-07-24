@@ -4,22 +4,58 @@
 # Description: This script automates the processing of music albums using Picard.
 # It moves successfully processed albums to a designated output directory, tracks failures,
 # and restarts Picard if necessary.
-# 
+#
 # Features:
 # - Process albums using Picard with custom commands.
 # - Track processed and failed albums in separate log files.
 # - Automatically restart Picard if it's not running.
 # - Remove empty artist directories after processing.
-# 
+#
 # Usage:
-# Ensure Picard and the commands file (commands.txt) are available.
-# Run the script using:
-# $ ./picard.sh
+# Ensure Picard, commands.txt, and picard-config.ini are available (see picard-config.ini.example).
+# Run the script from within this directory:
+# $ ./picard_album_processor.sh
 
-# Directory paths for music, output, and failed albums
-music_directory="/home/username/MusicToOrganize/"
-output_directory="/home/username/MusicToOrganize/Picard/"
-failed_directory="$music_directory/Failed"
+readonly CONFIG_FILE="picard-config.ini"
+
+# Read a key's value out of an INI-style config file, ignoring comments/section headers.
+# Args: $1 - key name, $2 - config file path
+read_config_value() {
+    local key="$1" config="$2"
+    grep -v '^#' "$config" \
+        | grep -oP "^${key}\s*=\s*\K.*" \
+        | head -1 \
+        | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Error: $CONFIG_FILE not found. Copy picard-config.ini.example to $CONFIG_FILE and fill in your paths." >&2
+    exit 1
+fi
+
+music_directory=$(read_config_value "music_directory" "$CONFIG_FILE")
+output_directory=$(read_config_value "output_directory" "$CONFIG_FILE")
+failed_directory=$(read_config_value "failed_directory" "$CONFIG_FILE")
+
+if [[ -z "$music_directory" || -z "$output_directory" ]]; then
+    echo "Error: music_directory and output_directory must both be set in $CONFIG_FILE" >&2
+    exit 1
+fi
+
+music_directory="${music_directory%/}"
+output_directory="${output_directory%/}"
+
+# failed_directory is optional; default to music_directory/Failed if not set.
+if [[ -z "$failed_directory" ]]; then
+    failed_directory="$music_directory/Failed"
+else
+    failed_directory="${failed_directory%/}"
+fi
+
+if [[ ! -d "$music_directory" ]]; then
+    echo "Error: music_directory does not exist: $music_directory" >&2
+    exit 1
+fi
 
 # Ensure the output and failed directories exist
 mkdir -p "$output_directory"
