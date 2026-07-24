@@ -28,8 +28,9 @@ To run the scripts in the correct order for updating artwork, use the `run.sh` f
    ```
    This will automate the processing of music albums using Picard.
 
-## **Wiki** Entry: 
-[artwork-config.ini](https://github.com/bonelifer/MusicScripts/wiki/artwork%E2%80%90config.ini-Configuration-Options) configuration entry
+## **Wiki** Entries:
+- [artwork-config.ini](https://github.com/bonelifer/MusicScripts/wiki/artwork%E2%80%90config.ini-Configuration-Options) configuration entry
+- [picard-config.ini](https://github.com/bonelifer/MusicScripts/wiki/picard%E2%80%90config.ini-Configuration-Options) configuration entry
 
 ## License
 
