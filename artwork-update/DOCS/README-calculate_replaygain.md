@@ -1,48 +1,51 @@
 # Calculate ReplayGain for MP3 Files
 
 ## Description
-This script calculates ReplayGain for MP3 files organized in an ARTIST/ALBUM/CD directory structure. It traverses through the directories, applying album gain and recursive track gain for each album.
+`calculate_replaygain.sh` applies ReplayGain tags to MP3 files using `mp3gain`. It auto-detects
+whether the given path is a single album/CD directory (MP3s directly inside it) or a root
+music directory (`ARTIST/ALBUM/[CD]` tree) and processes accordingly.
+
+Two calling contexts are supported:
+1. **New-music / single-album**: called with `-p /path/to/one/album` (e.g. from an import
+   pipeline) — processes just that directory.
+2. **Standalone / full-library**: called with `-p /path/to/root` or no `-p` at all (falls back
+   to `rootmusicdir` in `artwork-config.ini`) — traverses the whole tree. For repeated
+   full-library runs, prefer [`rg-lib.sh`](README-rg-lib.md), which adds cache-based skipping
+   so already-processed albums aren't re-scanned.
 
 ## Features
-- Calculates album gain for all MP3 files in a directory.
-- Applies recursive track gain for each album.
-- Supports ARTIST/ALBUM/CD directory structures.
-- Easy to configure and use.
+- Auto-detects leaf directory vs. root directory — no separate flag needed.
+- Applies album gain (`mp3gain -a -s i -k`) then track gain (`mp3gain -r -s i -k`) per album/CD.
+- Supports `ARTIST/ALBUM/CD` and `ARTIST/ALBUM` (no CD subfolder) structures.
+- Falls back to `rootmusicdir` from `artwork-config.ini` when `-p` isn't given.
 
 ## Requirements
-- **Bash**: The script is written in Bash and requires a compatible shell.
-- **mp3gain**: The `mp3gain` utility must be installed to calculate ReplayGain.
-  - Install `mp3gain` on Ubuntu/Debian:
-    ```bash
-    sudo apt install mp3gain
-    ```
-  - Install `mp3gain` on macOS (via Homebrew):
-    ```bash
-    brew install mp3gain
-    ```
+- **Bash**
+- **mp3gain**:
+  ```bash
+  sudo apt install mp3gain      # Debian/Ubuntu
+  brew install mp3gain          # macOS (Homebrew)
+  ```
+- `artwork-config.ini` with `[paths] rootmusicdir`, unless you always pass `-p`.
 
 ## Usage
-1. **Set the Base Directory**:
-   - Open the script in a text editor.
-   - Set the `base_dir` variable to the path where your ARTIST folders are located:
-     ```bash
-     base_dir="/media/path/to/your/Music/processing/directory/"
-     ```
-2. **Run the Script**:
-   ```bash
-   ./calculate_replaygain.sh
-   ```
+```bash
+./calculate_replaygain.sh                          # Uses rootmusicdir from artwork-config.ini
+./calculate_replaygain.sh -p /path/to/music         # Full-tree run against an explicit root
+./calculate_replaygain.sh -p "/path/to/Artist/Album"  # Single album/CD directory
+```
+
+### Command-Line Arguments
+| Argument | Description |
+|----------|-------------|
+| `-p`, `--path` | Directory to process — a leaf album/CD dir, or a root music dir. Overrides `artwork-config.ini`. |
+| `-h`, `--help` | Print usage and exit. |
 
 ## Notes
-- The script processes MP3 files in the following directory structure:
-  ```
-  ARTIST/
-    ALBUM/
-      CD/
-        *.mp3
-  ```
-- It skips non-MP3 files and directories that do not match the expected structure.
-- ReplayGain tags are written directly to the MP3 files.
+- ReplayGain tags are written directly to the MP3 files (`-k` avoids clipping on tagged gain).
+- `-s i` skips files that already carry ReplayGain tags matching the target scheme.
+- For bulk re-processing of an entire library with cache-based skipping, use
+  [`rg-lib.sh`](README-rg-lib.md) instead of calling this script directly.
 
 ## License
 

@@ -1,0 +1,9 @@
+# Live config (contains API keys / email)
+artwork-config.ini
+
+# Log files produced by the scripts
+*.log
+
+# Python bytecode cache
+__pycache__/
+*.pyc

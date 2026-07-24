@@ -1,77 +1,63 @@
 # Export Cover Art from MP3 Files
 
 ## Description
-This script automates the process of extracting and saving album cover art embedded in MP3 files. It searches for cover art in the ID3 tags of MP3 files and saves it as `cover.jpg` in the same folder. The script can process a specific folder, an entire music library, or only CD folders (e.g., CD 1, CD 2).
+`export-coverart.py` pulls embedded album art out of MP3 files and keeps the
+highest-resolution version as `cover.jpg` on disk. **It then strips all embedded artwork from
+every MP3 file in the folder**, regardless of whether that MP3's artwork was kept or discarded.
+Run this as a one-time "externalize the artwork" step, not as a repeatable cover-art updater —
+after the first run there is no embedded artwork left to compare against.
 
 ## Features
-- Extracts cover art from the first MP3 file in a folder.
-- Saves the extracted cover art as `cover.jpg` in the same folder.
-- Processes specific folders, entire music libraries, or only CD folders.
-- Skips folders where `cover.jpg` already exists.
-- Reads the root music directory from a configuration file.
+- Scans every `.mp3` in a folder for embedded `APIC` (cover art) frames and keeps the one with
+  the highest pixel count.
+- Compares that against any existing `cover.jpg` and writes the higher-resolution one to disk.
+- Removes all embedded `APIC` frames from every MP3 in the folder after the comparison,
+  regardless of outcome.
+- Supports a specific folder, the entire library, or CD-numbered subfolders only.
 
 ## Requirements
-- **Python 3.x**: The script is written in Python 3 and requires a compatible version.
-- **External Libraries**:
-  - `mutagen`: For reading and writing ID3 tags in MP3 files.
-  - `pillow`: For image processing (resizing and format conversion).
-- **Configuration File**: A configuration file (`artwork-config.ini`) with the following fields:
-  - `rootmusicdir`: The root directory of your music library.
-  - `TEMP_RES`: The desired resolution for resized cover art (optional, default is 600).
+- **Python 3.x**
+- **External libraries**: `mutagen`, `Pillow`
+- **Configuration file** (`artwork-config.ini`) with:
+  - `[paths] rootmusicdir` — root of your music library (falls back to a hardcoded default
+    path if the config or key is missing — set it explicitly to avoid surprises)
 
 ## Installation
-1. **Install Python 3.x**: Ensure Python 3 is installed on your system. You can download it from [python.org](https://www.python.org/).
-2. **Install Required Libraries**:
+1. Install Python 3.
+2. Install required libraries:
    ```bash
    pip install mutagen pillow
    ```
-3. **Set Up Configuration File**:
-   Rename the file `artwork-config.ini.example` to `artwork-config.ini` in the same directory as the script and adjust the following content:
+3. Copy `artwork-config.ini.example` to `artwork-config.ini` and set:
    ```ini
    [paths]
    rootmusicdir = /media/path/to/your/Music/processing/directory/
-
-   [cover_art_script]
-   TEMP_RES = 600
    ```
-   Replace `/media/path/to/your/Music/processing/directory/` with the actual path to your music library.
 
 ## Usage
-The script can be run with the following command-line arguments:
-
-### Examples
-1. **Process a Specific Folder**:
-   ```bash
-   python3 export-coverart.py -i "/path/to/album/folder/"
-   ```
-   This will extract and save cover art from MP3 files in the specified folder.
-
-2. **Process the Entire Music Library**:
-   ```bash
-   python3 export-coverart.py -a
-   ```
-   This will recursively process all folders in the root music directory.
-
-3. **Process Only CD Folders**:
-   ```bash
-   python3 export-coverart.py -a -c
-   ```
-   This will process only folders named `CD 1`, `CD 2`, etc., within the music library.
+```bash
+python3 export-coverart.py -i "/path/to/album/folder/"   # Process a specific folder
+python3 export-coverart.py -a                             # Process the entire music library
+python3 export-coverart.py -a -c                          # Process CD-numbered folders only
+```
+Running with no arguments prints help and exits.
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `-i`, `--input` | Process a specific folder (album or CD folder). |
 | `-a`, `--all`   | Process the entire music library. |
-| `-c`, `--cd`    | Process only CD folders (e.g., CD 1, CD 2). |
+| `-c`, `--cd`    | With `-a`, restrict to folders whose name starts with `cd `. |
 
 ## Logging
-The script logs its actions and errors to a file named `album-artwork.log` in the same directory as the script. This log file can be used for troubleshooting.
+This script does **not** use the `logging` module — all output is `print()` to the console
+only. There is no log file.
 
 ## Notes
-- The script skips folders where `cover.jpg` already exists.
-- If the cover art in an MP3 file has a higher resolution than the new artwork, the script will skip embedding the new artwork.
-- Non-JPEG images are automatically converted to JPEG format.
+- With `-a` (no `-c`), the script processes *every* directory under `rootmusicdir`, not just
+  album-level folders — each one is checked independently for MP3s.
+- Folders with no MP3 files are skipped with a printed message.
+- Non-JPEG embedded artwork is written to `cover.jpg` as-is (no format conversion).
 
 ## License
 

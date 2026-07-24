@@ -7,10 +7,7 @@ This project consists of a collection of scripts designed to automate various ta
 
 | Filename                  | Description                                                                 |
 |---------------------------|-----------------------------------------------------------------------------|
-| [ID3 to Cover Art Fetcher](./artwork-update/DOCS/README-id3tocovr.md)             | Fetches album artwork from multiple sources and embeds it into MP3 files.   |
-| [Export Cover Art from MP3 Files](./artwork-update/DOCS/README-export-coverart.md) | Extracts and saves album cover art from MP3 files to `cover.jpg`.           |
-| [Embed and Check Artwork Resolution in Music Files](./artwork-update/DOCS/README-embed-artwork.md)     | Embeds and checks the resolution of album cover art in MP3 files.           |
-| [Calculate ReplayGain for MP3 Files](./artwork-update/DOCS/README-calculate_replaygain.md) | Calculates ReplayGain for MP3 files organized in an ARTIST/ALBUM/CD directory structure. |
+| [Artwork Update Scripts](./artwork-update/README.md) | Fetches, resizes, compresses, and cleans up album cover art from multiple sources, plus ReplayGain and MP3 validation. See that folder's README for the full script list. |
 | [Picard Album Processor](./picard_album_processor/DOCS/Readme-picard_album_processor.md)                   | Automates the processing of music albums using Picard, tracks failures, and restarts Picard if necessary. |
 
 ### Instructions:
