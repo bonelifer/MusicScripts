@@ -76,11 +76,11 @@ Delete an album's line from either file to force it to be reprocessed on the nex
 ## Notes
 - `failed_directory` defaults to `<music_directory>/Failed` if left unset in
   `picard-config.ini`. That folder is itself excluded from processing on later runs.
-- Failed albums are moved out of `music_directory`, not left in place — review
+- Failed albums are moved out of `music_directory`, not left in place. Review
   `failed_directory` and `failed_albums.txt` to see what needs manual attention.
 - This script doesn't share `artwork-config.ini` with the scripts in
-  [`artwork-update/`](../../artwork-update/) — Picard automation and cover-art fetching are
-  different enough workflows that they're kept on separate config files.
+  [`artwork-update/`](../../artwork-update/). Picard automation and cover-art fetching are
+  different enough workflows to justify separate config files.
 
 ## License
 
