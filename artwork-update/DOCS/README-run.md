@@ -2,7 +2,7 @@
 
 ## Description
 Two orchestration scripts that chain the other scripts in this project into a single
-end-to-end music library maintenance pass. Neither takes arguments — edit the script itself to
+end-to-end music library maintenance pass. Neither takes arguments; edit the script itself to
 change the pipeline. Both assume they're run from inside the `artwork-update` directory (they
 invoke everything as `./script.py`).
 
@@ -43,7 +43,7 @@ folder. All dependencies (Python packages, `mp3gain`, `mp3val`) must be installe
 ```
 
 ## Notes
-- `root_cover_remover.py --confirm` runs non-interactively and deletes files — make sure
+- `root_cover_remover.py --confirm` runs non-interactively and deletes files. Make sure
   you're comfortable with what it will remove (see
   [README-root_cover_remover.md](README-root_cover_remover.md)) before running either wrapper
   unattended.

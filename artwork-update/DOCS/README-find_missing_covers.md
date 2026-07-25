@@ -3,7 +3,7 @@
 ## Description
 `find_missing_covers.sh` scans a music library for multi-disc `CD N` subfolders and reports
 every one that has no `cover.jpg` directly inside it. It's a discovery/reporting tool, not a
-fetcher — use it to find gaps the artwork-fetch scripts haven't filled yet, or to spot-check
+fetcher. Use it to find gaps the artwork-fetch scripts haven't filled yet, or to spot-check
 after a run.
 
 ## Features
@@ -11,7 +11,7 @@ after a run.
 - For each one, checks for a `cover.jpg` (case-insensitive) directly inside it — no recursion
   into further subfolders.
 - Writes the folders missing a cover to `missing_covers.txt`, one path per line.
-- Top-level album folders without a `CD N` subfolder are not checked at all — this script is
+- Top-level album folders without a `CD N` subfolder are not checked at all. This script is
   scoped to multi-disc albums only.
 
 ## Requirements
@@ -40,7 +40,7 @@ since it's a per-run report rather than project source). Any existing `missing_c
 overwritten. An empty file means no `CD N` subfolder is missing a cover.
 
 ## Notes
-- This only checks `CD N` subfolders, not top-level album folders — an album with no `CD`
+- This only checks `CD N` subfolders, not top-level album folders. An album with no `CD`
   subfolder structure at all won't be checked or reported, even if it has no cover.
 - Every artwork-fetch script in this directory now supports `-i <folder>` to process a single
   folder directly. [`retry_missing_covers.sh`](README-retry_missing_covers.md) does exactly
