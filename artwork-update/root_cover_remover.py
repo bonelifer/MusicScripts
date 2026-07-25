@@ -15,14 +15,6 @@ import argparse
 config = configparser.ConfigParser()
 config.read('artwork-config.ini')
 
-# Validate configuration
-def validate_config(config):
-    if "paths" not in config or "rootmusicdir" not in config["paths"]:
-        print("Error: Missing [paths] section or rootmusicdir in config file.")
-        sys.exit(1)
-
-validate_config(config)
-
 # Logging setup
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cover-cleanup.log")
 logger = logging.getLogger()
@@ -41,8 +33,6 @@ console_handler.setFormatter(console_formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-ROOT_MUSIC_DIR = config["paths"]["rootmusicdir"]
-
 def is_cd_subfolder(path):
     """Check if path is a CD subfolder"""
     folder_name = os.path.basename(path).lower()
@@ -54,16 +44,22 @@ def main():
         description="Remove cover.jpg ONLY from album root folders while preserving CD subfolder covers"
     )
     parser.add_argument("--confirm", action="store_true", help="Actually perform deletions (dry run by default)")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini for this run.")
     args = parser.parse_args()
 
+    root_music_dir = args.path or config.get("paths", "rootmusicdir", fallback=None)
+    if not root_music_dir:
+        logger.error("💥 Error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+        sys.exit(1)
+
     logger.info("🚀 Starting Remove Cover Art from Album Root cleanup")
-    logger.info(f"📁 Root music directory: {ROOT_MUSIC_DIR}")
-    
+    logger.info(f"📁 Root music directory: {root_music_dir}")
+
     if not args.confirm:
         logger.info("⚠️ Running in dry-run mode (use --confirm to actually delete files)")
 
     try:
-        for root, dirs, files in os.walk(ROOT_MUSIC_DIR):
+        for root, dirs, files in os.walk(root_music_dir):
             # Skip processing if this is a CD subfolder
             if is_cd_subfolder(root):
                 continue

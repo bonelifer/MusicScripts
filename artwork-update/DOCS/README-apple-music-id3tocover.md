@@ -19,7 +19,7 @@ than the existing one.
 - **Python 3.x**
 - **External libraries**: `mutagen`, `Pillow`, `requests`, `itunespy`
 - **Configuration file** (`artwork-config.ini`) with:
-  - `[paths] rootmusicdir` — root of your music library
+  - `[paths] rootmusicdir` — root of your music library, unless `-p` is always used instead
   - `[settings] MIN_RES` — optional, defaults to `500` (not currently used to gate downloads,
     kept for config compatibility with the other cover-art scripts)
 
@@ -37,17 +37,21 @@ than the existing one.
 
 ## Usage
 ```bash
-python3 apple-music-id3tocover.py            # Process the entire music library
-python3 apple-music-id3tocover.py -d         # Same, with verbose debug logging
+python3 apple-music-id3tocover.py                            # Process the entire music library
+python3 apple-music-id3tocover.py -d                         # Same, with verbose debug logging
+python3 apple-music-id3tocover.py -p /path/to/music           # Same, overriding rootmusicdir
+python3 apple-music-id3tocover.py -i "/path/to/album/folder/" # Process a specific folder only
 ```
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `-d`, `--debug` | Enable debug-level logging (console and log file). |
+| `-p`, `--path`  | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. |
+| `-i`, `--input` | Process a specific folder (album or CD folder) directly, ignoring `rootmusicdir`/`-p` entirely. |
 
-There is no `-i`/`-a` folder selector — the script always walks the whole
-`[paths] rootmusicdir` tree.
+There is no `-a` flag — omitting `-i` always walks the whole configured (or `-p`-overridden)
+tree.
 
 ## Logging
 Logs to `apple-music-artwork.log` in the script's directory, and to the console. Log lines are

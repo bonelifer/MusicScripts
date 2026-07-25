@@ -165,10 +165,11 @@ def main():
     parser.add_argument("-a", "--all", action="store_true", help="Process the entire music library.")
     parser.add_argument("-c", "--cd", action="store_true", help="Process CD folders only.")
     parser.add_argument("-i", "--input", type=str, help="Process a specific folder (album or CD folder).")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini when used with -a.")
 
     args = parser.parse_args()
 
-    if not any(vars(args).values()):
+    if not (args.input or args.all):
         parser.print_help()
         sys.exit(1)
 
@@ -178,7 +179,8 @@ def main():
             sys.exit(1)
         process_folder(args.input)
     elif args.all:
-        for root, dirs, _ in os.walk(ROOT_MUSIC_DIR):
+        root_music_dir = args.path or ROOT_MUSIC_DIR
+        for root, dirs, _ in os.walk(root_music_dir):
             for dir_name in dirs:
                 folder_path = os.path.join(root, dir_name)
                 if args.cd:

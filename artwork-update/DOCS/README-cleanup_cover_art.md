@@ -13,7 +13,8 @@ whichever of the two is smaller on disk, deleting the other.
 
 ## Requirements
 - **Python 3.x** (standard library only — no extra packages)
-- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`.
+- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`, unless `-p` is
+  always used instead.
 
 ## Installation
 1. Install Python 3.
@@ -23,13 +24,15 @@ whichever of the two is smaller on disk, deleting the other.
 ```bash
 python3 cleanup_cover_art.py -i "/path/to/album/folder/"   # Process a specific folder
 python3 cleanup_cover_art.py -a                             # Process the entire music library
+python3 cleanup_cover_art.py -a -p /path/to/music            # Same, overriding rootmusicdir
 ```
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `-i`, `--input` | Process a specific folder. |
-| `-a`, `--all`   | Process the entire music library. |
+| `-a`, `--all`   | Process the entire music library (`rootmusicdir` from config, or `-p` if given). |
+| `-p`, `--path`  | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. Only meaningful with `-a`. |
 
 One of `-i` or `-a` is required.
 

@@ -39,15 +39,17 @@ after the first run there is no embedded artwork left to compare against.
 python3 export-coverart.py -i "/path/to/album/folder/"   # Process a specific folder
 python3 export-coverart.py -a                             # Process the entire music library
 python3 export-coverart.py -a -c                          # Process CD-numbered folders only
+python3 export-coverart.py -a -p /path/to/music            # Process entire library, overriding rootmusicdir
 ```
-Running with no arguments prints help and exits.
+Running with neither `-i` nor `-a` prints help and exits.
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
-| `-i`, `--input` | Process a specific folder (album or CD folder). |
+| `-i`, `--input` | Process a specific folder (album or CD folder). Ignores `rootmusicdir`/`-p` entirely. |
 | `-a`, `--all`   | Process the entire music library. |
 | `-c`, `--cd`    | With `-a`, restrict to folders whose name starts with `cd `. |
+| `-p`, `--path`  | Override `[paths] rootmusicdir` from `artwork-config.ini` when used with `-a`. |
 
 ## Logging
 This script does **not** use the `logging` module — all output is `print()` to the console

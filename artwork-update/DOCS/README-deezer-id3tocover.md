@@ -12,14 +12,16 @@ that don't already have a cover meeting `MIN_RES`.
 - Validates downloaded images: must be JPEG/JFIF, square, and at least `MIN_RES` on each side.
 - Skips folders that already have a `cover.jpg` meeting `MIN_RES` — logged as "has good cover".
 - Graceful Ctrl+C handling — finishes the current folder, then stops.
-- `--debug` flag (checked directly against `sys.argv`) for verbose logging.
+- `--debug` flag for verbose logging; `-p/--path` to override the music directory for one run;
+  `-i/--input` to process a single folder directly.
 
 ## Requirements
 - **Python 3.x**
 - **External libraries**: `mutagen`, `Pillow`, `requests`
 - **Configuration file** (`artwork-config.ini`) with:
-  - `[paths] rootmusicdir` — root of your music library
-  - `[settings] MIN_RES` — minimum acceptable width/height, in pixels (required, no fallback)
+  - `[paths] rootmusicdir` — root of your music library, unless `-p`/`-i` is always used instead
+  - `[settings] MIN_RES` — minimum acceptable width/height, in pixels (required, no fallback —
+    still required even in `-i` mode, since it's not something `-i`/`-p` can override)
 
 ## Installation
 1. Install Python 3.
@@ -38,17 +40,21 @@ that don't already have a cover meeting `MIN_RES`.
 
 ## Usage
 ```bash
-python3 deezer-id3tocover.py            # Process the entire music library
-python3 deezer-id3tocover.py --debug    # Same, with verbose debug logging
+python3 deezer-id3tocover.py                            # Process the entire music library
+python3 deezer-id3tocover.py --debug                    # Same, with verbose debug logging
+python3 deezer-id3tocover.py -p /path/to/music           # Same, overriding rootmusicdir
+python3 deezer-id3tocover.py -i "/path/to/album/folder/" # Process a specific folder only
 ```
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `--debug` | Enable debug-level logging (console and log file). |
+| `-p`, `--path` | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. |
+| `-i`, `--input` | Process a specific folder (album or CD folder) directly, ignoring `rootmusicdir`/`-p` entirely. |
 
-There is no `-i`/`-a`/`-c` argument parsing in this script — any other flags are silently
-ignored, and it always walks the whole `[paths] rootmusicdir` tree.
+There is no `-a`/`-c` flag — omitting `-i` always walks the whole configured (or `-p`-overridden)
+tree.
 
 ## Logging
 Logs to `cover_updater.log` in the script's directory, and to the console. Log lines are

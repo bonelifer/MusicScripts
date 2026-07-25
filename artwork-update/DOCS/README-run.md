@@ -20,10 +20,8 @@ invoke everything as `./script.py`).
 2. `export-coverart.py -a` — same, entire library
 3. `apple-music-id3tocover.py`
 4. `mb-cca-id3tocover.py -a`
-5. `deezer-id3tocover.py -c -a` (note: this script ignores all CLI flags — see
-   [README-deezer-id3tocover.md](README-deezer-id3tocover.md))
-6. `lastfm-id3tocover.py -a` (note: this script also ignores all CLI flags — see
-   [README-lastfm-id3tocover.md](README-lastfm-id3tocover.md))
+5. `deezer-id3tocover.py`
+6. `lastfm-id3tocover.py`
 7. `album_cover_reducer_to_1400px.py`
 8. `album_cover_compressor_to_jpg90.py`
 9. `cleanup_cover_art.py -a`
@@ -49,9 +47,12 @@ folder. All dependencies (Python packages, `mp3gain`, `mp3val`) must be installe
   you're comfortable with what it will remove (see
   [README-root_cover_remover.md](README-root_cover_remover.md)) before running either wrapper
   unattended.
-- Because `deezer-id3tocover.py` and `lastfm-id3tocover.py` ignore the `-c`/`-a` flags passed to
-  them here, those flags in the pipeline have no effect on those two steps — they always
-  process the entire library.
+- Every script called here (Python and Bash alike) now accepts `-p`/`--path` to override
+  `rootmusicdir` from `artwork-config.ini` for a single run — see each script's own doc. Neither
+  `run.sh` nor `run-light.sh` passes `-p` itself; both always use whatever `rootmusicdir` is set
+  to in the config. To run the whole pipeline against a different directory without editing the
+  config, you'd need to edit the wrapper script directly, since it doesn't take arguments of its
+  own.
 - Neither wrapper checks the exit code of individual steps; a failure partway through does not
   stop the pipeline.
 

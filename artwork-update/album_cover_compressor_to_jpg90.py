@@ -9,6 +9,7 @@ using configuration from artwork-config.ini
 import os
 import sys
 import logging
+import argparse
 import tempfile
 import configparser
 from PIL import Image, ImageFile
@@ -37,20 +38,13 @@ logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
 def load_config():
-    """Load and validate configuration."""
+    """Load configuration. Returns rootmusicdir, or None if unset."""
     config = configparser.ConfigParser()
     if not os.path.exists(CONFIG_FILE):
         raise FileNotFoundError(f"Config file missing: {CONFIG_FILE}")
-    
+
     config.read(CONFIG_FILE)
-    try:
-        music_path = config.get("paths", "rootmusicdir")
-        if not os.path.isdir(music_path):
-            raise ValueError(f"Invalid music path: {music_path}")
-        return music_path
-    except Exception as e:
-        logging.error(f"Config error: {str(e)}")
-        raise
+    return config.get("paths", "rootmusicdir", fallback=None)
 
 def convert_to_rgb(img):
     """Convert any image mode to RGB."""
@@ -124,8 +118,23 @@ def reduce_cover(cover_path):
 
 def main():
     """Main function to process all cover images."""
+    parser = argparse.ArgumentParser(description="Recompress cover.jpg files 1.0 MiB or larger.")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini for this run.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug-level logging.")
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     try:
-        music_path = load_config()
+        music_path = args.path or load_config()
+        if not music_path:
+            logging.critical("Fatal error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+            sys.exit(1)
+        if not os.path.isdir(music_path):
+            logging.critical(f"Fatal error: Invalid music path: {music_path}")
+            sys.exit(1)
+
         logging.info(f"Starting Album Cover Compressor resolution reduction (quality {REDUCE_QUALITY})")
         logging.info(f"Scanning: {music_path}")
 
@@ -161,6 +170,4 @@ def main():
         sys.exit(1)
 
 if __name__ == '__main__':
-    if '--debug' in sys.argv:
-        logging.getLogger().setLevel(logging.DEBUG)
     main()

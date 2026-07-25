@@ -15,7 +15,8 @@ redundant clutter. CD subfolder covers are always preserved. Runs as a dry run b
 
 ## Requirements
 - **Python 3.x** (standard library only — no extra packages)
-- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`.
+- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`, unless `-p` is
+  always used instead.
 
 ## Installation
 1. Install Python 3.
@@ -23,14 +24,16 @@ redundant clutter. CD subfolder covers are always preserved. Runs as a dry run b
 
 ## Usage
 ```bash
-python3 root_cover_remover.py              # Dry run — lists what would be removed
-python3 root_cover_remover.py --confirm    # Actually deletes the files
+python3 root_cover_remover.py                          # Dry run — lists what would be removed
+python3 root_cover_remover.py --confirm                # Actually deletes the files
+python3 root_cover_remover.py -p /path/to/music         # Override rootmusicdir for this run
 ```
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `--confirm` | Actually perform deletions. Without it, the script only logs what it would do. |
+| `-p`, `--path` | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. |
 
 ## Logging
 Logs to `cover-cleanup.log` in the script's directory, and to the console. Log lines are

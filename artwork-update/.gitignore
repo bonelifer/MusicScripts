@@ -4,6 +4,9 @@ artwork-config.ini
 # Log files produced by the scripts
 *.log
 
+# Per-run report from find_missing_covers.sh
+missing_covers.txt
+
 # Python bytecode cache
 __pycache__/
 *.pyc

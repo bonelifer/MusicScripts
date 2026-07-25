@@ -2,14 +2,34 @@
 #
 # mp3validate.sh - Validate and optionally fix MP3 files using `mp3val`.
 #
-# Uses `artwork-config.ini` to determine the music directory.
+# Uses `artwork-config.ini` to determine the music directory, unless overridden with -p.
 # Scans recursively for `.mp3` files and checks each using `mp3val`.
 # Logs files with warnings or repairs to /tmp/mp3-errors.txt.
 #
 # Requires: mp3val
-# Usage: ./mp3validate.sh
+# Usage: ./mp3validate.sh [-p|--path /path/to/music]
 
 set -e
+
+path_override=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -p|--path)
+            path_override="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-p|--path /path/to/music]"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Usage: $0 [-p|--path /path/to/music]" >&2
+            exit 1
+            ;;
+    esac
+done
 
 # Check for mp3val
 if ! command -v mp3val >/dev/null 2>&1; then
@@ -24,11 +44,15 @@ if ! command -v mp3val >/dev/null 2>&1; then
     fi
 fi
 
-# Extract rootmusicdir from config
-base_dir=$(grep -v '^#' artwork-config.ini | grep -oP '^rootmusicdir\s*=\s*\K.*' | sed 's/^[ \t]*//;s/[ \t]*$//')
+if [[ -n "$path_override" ]]; then
+    base_dir="$path_override"
+else
+    # Extract rootmusicdir from config
+    base_dir=$(grep -v '^#' artwork-config.ini 2>/dev/null | grep -oP '^rootmusicdir\s*=\s*\K.*' | sed 's/^[ \t]*//;s/[ \t]*$//')
+fi
 
 if [[ -z "$base_dir" || ! -d "$base_dir" ]]; then
-    echo "Error: rootmusicdir not found or not a valid directory in artwork-config.ini"
+    echo "Error: no valid music directory. Use -p <folder> or set rootmusicdir in artwork-config.ini." >&2
     exit 1
 fi
 

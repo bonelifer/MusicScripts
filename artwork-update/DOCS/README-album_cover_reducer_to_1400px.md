@@ -11,12 +11,13 @@ pre-resize file).
   (RGBA/P/L converted to RGB), permission errors, and non-image files without crashing.
 - Verifies the resized output before replacing the original; keeps a `cover.jpg.bak` of the
   pre-resize file.
-- `--debug` flag (checked directly against `sys.argv`) for verbose logging.
+- `--debug` flag for verbose logging; `-p/--path` to override the music directory for one run.
 
 ## Requirements
 - **Python 3.x**
 - **External library**: `Pillow`
-- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`.
+- **Configuration file** (`artwork-config.ini`) with `[paths] rootmusicdir`, unless `-p` is
+  always used instead.
 
 ## Installation
 1. Install Python 3.
@@ -28,11 +29,19 @@ pre-resize file).
 
 ## Usage
 ```bash
-python3 album_cover_reducer_to_1400px.py            # Process the entire music library
-python3 album_cover_reducer_to_1400px.py --debug    # Same, with verbose debug logging
+python3 album_cover_reducer_to_1400px.py                    # Process the entire music library
+python3 album_cover_reducer_to_1400px.py --debug            # Same, with verbose debug logging
+python3 album_cover_reducer_to_1400px.py -p /path/to/music   # Same, overriding rootmusicdir
 ```
-No `-i`/`-a` folder selector — it always walks the whole `[paths] rootmusicdir` tree looking
-for files literally named `cover.jpg`.
+
+### Command-Line Arguments
+| Argument | Description |
+|----------|-------------|
+| `--debug` | Enable debug-level logging (console and log file). |
+| `-p`, `--path` | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. |
+
+No `-i`/`-a` folder selector — it always walks the whole configured (or overridden) tree
+looking for files literally named `cover.jpg`.
 
 ## Logging
 Logs to `cover_resizer.log` in the script's directory, and to the console. Log lines are

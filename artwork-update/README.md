@@ -55,6 +55,7 @@ exceptions) log to both the console and a per-script `.log` file in this directo
 | `album_cover_compressor_to_jpg90.py` | Recompress covers ≥ 1.0 MiB at quality 90 | [DOCS/README-album_cover_compressor_to_jpg90.md](DOCS/README-album_cover_compressor_to_jpg90.md) |
 | `cleanup_cover_art.py` | Keep the smaller of `cover.jpg` / `cover.jpg.bak` | [DOCS/README-cleanup_cover_art.md](DOCS/README-cleanup_cover_art.md) |
 | `root_cover_remover.py` | Remove redundant `cover.jpg` from multi-disc album roots | [DOCS/README-root_cover_remover.md](DOCS/README-root_cover_remover.md) |
+| `find_missing_covers.sh` | Report `CD N` subfolders with no `cover.jpg` | [DOCS/README-find_missing_covers.md](DOCS/README-find_missing_covers.md) |
 
 ### Audio quality
 | Script | Purpose | Doc |
@@ -68,16 +69,13 @@ exceptions) log to both the console and a per-script `.log` file in this directo
 |---|---|---|
 | `run.sh` | Full pipeline (all of the above, in order) | [DOCS/README-run.md](DOCS/README-run.md) |
 | `run-light.sh` | Cover-art-only pipeline | [DOCS/README-run.md](DOCS/README-run.md) |
+| `retry_missing_covers.sh` | Re-run the full pipeline, scoped to just the folders `find_missing_covers.sh` flags | [DOCS/README-retry_missing_covers.md](DOCS/README-retry_missing_covers.md) |
 
 ### Configuration
 | File | Purpose |
 |---|---|
 | `artwork-config.ini.example` | Template — copy to `artwork-config.ini` and fill in |
 | `artwork-config.ini` | Your actual config (git-ignored; contains API keys) |
-
-`artists.txt` and `lidarr-import-config.ini` are not read by any script currently in this
-directory — they appear to be leftovers from a removed Lidarr-import workflow. Safe to ignore
-or remove unless you're reviving that workflow.
 
 ## License
 

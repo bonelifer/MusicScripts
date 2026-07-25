@@ -16,10 +16,7 @@ import argparse
 def load_config():
     config = configparser.ConfigParser()
     config.read('artwork-config.ini')
-    if 'paths' not in config or 'rootmusicdir' not in config['paths']:
-        print("Error: Missing 'rootmusicdir' in artwork-config.ini")
-        sys.exit(1)
-    return config['paths']['rootmusicdir']
+    return config.get('paths', 'rootmusicdir', fallback=None)
 
 # Logging setup (custom format)
 LOG_FILE = "cover_cleanup.log"
@@ -75,17 +72,17 @@ def process_all_folders(base_folder):
                 process_folder(folder_path)
 
 def main():
-    ROOT_MUSIC_DIR = load_config()  # Get path from artwork-config.ini
-
     parser = argparse.ArgumentParser(
         description="Keep the smaller of cover.jpg or cover.jpg.bak, delete the other."
     )
     parser.add_argument("-i", "--input", type=str, help="Process a specific folder.")
     parser.add_argument("-a", "--all", action="store_true", help="Process all folders recursively.")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini for this run.")
     args = parser.parse_args()
 
+    root_music_dir = args.path or load_config()
+
     logger.info("🚀 Starting cover cleanup")
-    logger.info(f"📁 Root music directory: {ROOT_MUSIC_DIR}")  # <-- Added this line
 
     if args.input:
         if not os.path.isdir(args.input):
@@ -93,7 +90,11 @@ def main():
             sys.exit(1)
         process_folder(args.input)
     elif args.all:
-        process_all_folders(ROOT_MUSIC_DIR)
+        if not root_music_dir:
+            logger.error("💥 Error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+            sys.exit(1)
+        logger.info(f"📁 Root music directory: {root_music_dir}")
+        process_all_folders(root_music_dir)
     else:
         logger.error("💥 Error: Use -i <folder> or -a for all folders.")
         sys.exit(1)

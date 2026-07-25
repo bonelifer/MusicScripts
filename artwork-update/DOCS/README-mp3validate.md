@@ -6,7 +6,7 @@
 
 ## Features
 - Prompts to install `mp3val` via `apt` if it isn't already present.
-- Reads `rootmusicdir` from `artwork-config.ini`.
+- Reads `rootmusicdir` from `artwork-config.ini`, unless `-p` is given.
 - Runs `mp3val -f -nb` (auto-fix, no backup) against every MP3 found.
 - Collects only files with `WARNING` or `FIXED` output into a results file.
 - Prints a running `(n/total)` progress line while scanning.
@@ -14,13 +14,19 @@
 ## Requirements
 - **Bash**
 - **mp3val** (offered for auto-install via `apt` if missing)
-- `artwork-config.ini` with `[paths] rootmusicdir`
+- `artwork-config.ini` with `[paths] rootmusicdir`, unless `-p` is always used instead
 
 ## Usage
 ```bash
-./mp3validate.sh
+./mp3validate.sh                          # Uses rootmusicdir from artwork-config.ini
+./mp3validate.sh -p /path/to/music        # Overrides rootmusicdir for this run
 ```
-No arguments or flags.
+
+### Command-Line Arguments
+| Argument | Description |
+|----------|-------------|
+| `-p`, `--path` | Override `rootmusicdir` from `artwork-config.ini` for this run. |
+| `-h`, `--help` | Print usage and exit. |
 
 ## Logging
 Results (files with warnings, or that `mp3val` fixed) are written to `/tmp/mp3-errors.txt`,

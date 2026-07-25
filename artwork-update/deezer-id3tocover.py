@@ -18,8 +18,9 @@ Configuration:
 - [settings] MIN_RES = 500  (minimum acceptable resolution for artwork)
 
 Usage:
-    python3 cover_updater.py
-    python3 cover_updater.py --debug   # Enables verbose debug logging
+    python3 deezer-id3tocover.py
+    python3 deezer-id3tocover.py --debug             # Enables verbose debug logging
+    python3 deezer-id3tocover.py -p /path/to/music    # Override rootmusicdir for this run
 
 Log Output:
 - Saves activity logs to `cover_updater.log`
@@ -29,6 +30,7 @@ import os
 import sys
 import signal
 import logging
+import argparse
 import configparser
 import requests
 from PIL import Image, UnidentifiedImageError
@@ -88,14 +90,9 @@ def load_config():
     config.read(CONFIG_FILE)
     try:
         settings = {
-            'music_path': config.get("paths", "rootmusicdir"),
+            'music_path': config.get("paths", "rootmusicdir", fallback=None),
             'min_res': config.getint("settings", "MIN_RES")
         }
-
-        # Verify music path exists
-        if not os.path.isdir(settings['music_path']):
-            raise ValueError(f"Invalid music path: {settings['music_path']}")
-        
         return settings
 
     except Exception as e:
@@ -291,7 +288,9 @@ def process_folder(folder, root_path, min_res):
 
     Args:
         folder (str): Folder path
-        root_path (str): Base music library path
+        root_path (str or None): Base music library path (the walk's starting
+            point, skipped so it isn't treated as an album itself). Pass
+            None (as -i mode does) to process folder unconditionally.
         min_res (int): Minimum resolution for artwork
 
     Returns:
@@ -302,7 +301,7 @@ def process_folder(folder, root_path, min_res):
 
     try:
         # Skip base folder or empty/non-music folders
-        if Path(folder) == Path(root_path) or not has_mp3s(folder):
+        if (root_path is not None and Path(folder) == Path(root_path)) or not has_mp3s(folder):
             return False
 
         # Read metadata
@@ -341,6 +340,15 @@ def main():
     """
     global original_sigint
 
+    parser = argparse.ArgumentParser(description="Update album artwork from Deezer.")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini for this run.")
+    parser.add_argument("-i", "--input", type=str, help="Process a specific folder (album or CD folder) instead of the whole library.")
+    parser.add_argument("--debug", action="store_true", help="Enable debug-level logging.")
+    args = parser.parse_args()
+
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
     try:
         # Set interrupt handler
         original_sigint = signal.getsignal(signal.SIGINT)
@@ -348,33 +356,48 @@ def main():
 
         # Read settings
         config = load_config()
-        music_path = Path(config['music_path'])
         min_res = config['min_res']
 
-        if not music_path.exists():
-            raise FileNotFoundError(f"Music directory not found: {music_path}")
-
         logging.info(f"🚀 Starting Deezer cover art update (min {min_res}px)")
-        logging.info(f"📁 Scanning: {music_path}")
-        logging.info("Press Ctrl+C to stop after current album")
 
-        # Walk through directories and process albums
         updated = 0
-        for root, dirs, _ in os.walk(music_path):
-            if should_exit:
-                break
-
-            if process_folder(root, music_path, min_res):
+        if args.input:
+            if not os.path.isdir(args.input):
+                logging.critical(f"💥 Fatal error: {args.input} is not a valid directory.")
+                sys.exit(1)
+            scanned = args.input
+            if process_folder(args.input, None, min_res):
                 updated += 1
+        else:
+            music_path_str = args.path or config['music_path']
+            if not music_path_str:
+                logging.critical("💥 Fatal error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+                sys.exit(1)
+            music_path = Path(music_path_str)
+            scanned = music_path
 
-            # Check for CD subfolders
-            for dir_name in filter(is_cd_folder, dirs):
+            if not music_path.exists():
+                raise FileNotFoundError(f"Music directory not found: {music_path}")
+
+            logging.info(f"📁 Scanning: {music_path}")
+            logging.info("Press Ctrl+C to stop after current album")
+
+            # Walk through directories and process albums
+            for root, dirs, _ in os.walk(music_path):
                 if should_exit:
                     break
 
-                cd_path = os.path.join(root, dir_name)
-                if process_folder(cd_path, music_path, min_res):
+                if process_folder(root, music_path, min_res):
                     updated += 1
+
+                # Check for CD subfolders
+                for dir_name in filter(is_cd_folder, dirs):
+                    if should_exit:
+                        break
+
+                    cd_path = os.path.join(root, dir_name)
+                    if process_folder(cd_path, music_path, min_res):
+                        updated += 1
 
         # Final log
         if should_exit:
@@ -382,7 +405,7 @@ def main():
         else:
             logging.info(f"✅ Completed! Updated {updated} covers")
 
-        print(f"\nSummary:\n  - Albums processed: {music_path}")
+        print(f"\nSummary:\n  - Albums processed: {scanned}")
         print(f"  - Covers updated: {updated}")
         print(f"  - Details in: {LOG_FILE}")
 
@@ -393,9 +416,5 @@ def main():
         signal.signal(signal.SIGINT, original_sigint)
 
 if __name__ == '__main__':
-    # Enable verbose debug logging with --debug flag
-    if '--debug' in sys.argv:
-        logging.getLogger().setLevel(logging.DEBUG)
-
     main()
 

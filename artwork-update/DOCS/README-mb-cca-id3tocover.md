@@ -36,20 +36,22 @@ existing one or the existing one doesn't meet the configured minimum resolution.
    [paths]
    rootmusicdir = /media/path/to/your/Music/processing/directory/
    ```
-   The script exits with an error at startup if `[settings] MIN_RES` or `[paths] rootmusicdir`
-   is missing.
+   The script exits with an error at startup if `[settings] MIN_RES` is missing. `[paths]
+   rootmusicdir` is only required when using `-a` and no `-p` override is given.
 
 ## Usage
 ```bash
-python3 mb-cca-id3tocover.py -i "/path/to/album/folder/"   # Process a specific folder
-python3 mb-cca-id3tocover.py -a                             # Process the entire music library
+python3 mb-cca-id3tocover.py -i "/path/to/album/folder/"        # Process a specific folder
+python3 mb-cca-id3tocover.py -a                                  # Process the entire music library
+python3 mb-cca-id3tocover.py -a -p /path/to/music                # Same, overriding rootmusicdir
 ```
 
 ### Command-Line Arguments
 | Argument | Description |
 |----------|-------------|
 | `-i`, `--input` | Process a specific folder (album or CD folder). |
-| `-a`, `--all`   | Process the entire music library (`rootmusicdir` from config). |
+| `-a`, `--all`   | Process the entire music library (`rootmusicdir` from config, or `-p` if given). |
+| `-p`, `--path`  | Override `[paths] rootmusicdir` from `artwork-config.ini` for this run. Only meaningful with `-a`. |
 
 One of `-i` or `-a` is required.
 

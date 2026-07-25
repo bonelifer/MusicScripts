@@ -29,7 +29,6 @@ config.read('artwork-config.ini')
 def validate_config(config):
     required_fields = {
         "settings": ["MIN_RES"],
-        "paths": ["rootmusicdir"],
     }
     for section, fields in required_fields.items():
         if section not in config:
@@ -70,7 +69,6 @@ logger.addHandler(console_handler)
 
 # Settings
 MIN_RES = int(config["settings"]["MIN_RES"])
-ROOT_MUSIC_DIR = config["paths"]["rootmusicdir"]
 
 # Setup MusicBrainz
 musicbrainzngs.set_useragent("ID3ToCover", "1.0", "https://example.com")
@@ -226,10 +224,15 @@ def main():
     )
     parser.add_argument("-i", "--input", type=str, help="Process a specific folder (album folder).")
     parser.add_argument("-a", "--all", action="store_true", help="Process the entire music library.")
+    parser.add_argument("-p", "--path", type=str, help="Override rootmusicdir from artwork-config.ini for this run.")
     args = parser.parse_args()
 
+    root_music_dir = args.path or config.get("paths", "rootmusicdir", fallback=None)
+    if args.all and not root_music_dir:
+        logger.error("💥 Error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+        sys.exit(1)
+
     logger.info("🚀 Starting MusicBrainz Cover Art Archive cover art update")
-    logger.info(f"📁 Scanning: {ROOT_MUSIC_DIR}")
 
     try:
         if args.input:
@@ -238,7 +241,8 @@ def main():
                 sys.exit(1)
             process_folder(args.input)
         elif args.all:
-            process_all_folders(ROOT_MUSIC_DIR)
+            logger.info(f"📁 Scanning: {root_music_dir}")
+            process_all_folders(root_music_dir)
         else:
             logger.error("💥 Error: Please specify either -i <folder> or -a to process all folders.")
             sys.exit(1)

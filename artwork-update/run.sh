@@ -9,9 +9,9 @@ python3 ./apple-music-id3tocover.py
 echo " "
 python3 ./mb-cca-id3tocover.py -a
 echo " "
-python3 ./deezer-id3tocover.py -c -a
+python3 ./deezer-id3tocover.py
 echo " "
-python3 ./lastfm-id3tocover.py -a
+python3 ./lastfm-id3tocover.py
 echo " "
 
 python3 ./album_cover_reducer_to_1400px.py

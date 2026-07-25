@@ -5,6 +5,7 @@ Album Cover Updater with Real-Time Console Output
 """
 
 import os
+import sys
 import signal
 import logging
 import argparse
@@ -35,6 +36,8 @@ def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description='Update album artwork from Apple Music')
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('-p', '--path', type=str, help='Override rootmusicdir from artwork-config.ini for this run.')
+    parser.add_argument('-i', '--input', type=str, help='Process a specific folder (album or CD folder) instead of the whole library.')
     return parser.parse_args()
 
 def setup_logging(debug=False):
@@ -64,7 +67,7 @@ def load_config():
     config = configparser.ConfigParser()
     config.read(CONFIG_FILE)
     return {
-        'music_path': config.get("paths", "rootmusicdir"),
+        'music_path': config.get("paths", "rootmusicdir", fallback=None),
         'min_res': config.getint("settings", "MIN_RES", fallback=500)
     }
 
@@ -171,9 +174,14 @@ def download_cover(artwork_url, save_path, expected_res=(1200,1200)):
             os.remove(temp_path)
         return False
 
-def process_folder(folder, root_path):
-    """Process a single album folder with proper console output"""
-    if should_exit or Path(folder) == Path(root_path) or not has_mp3s(folder):
+def process_folder(folder, root_path=None):
+    """Process a single album folder with proper console output.
+
+    root_path is the walk's starting point, skipped so it isn't treated as
+    an album itself. Pass None (as -i mode does) to process folder
+    unconditionally.
+    """
+    if should_exit or (root_path is not None and Path(folder) == Path(root_path)) or not has_mp3s(folder):
         return False
 
     artist, album = get_artist_album_from_mp3(folder)
@@ -215,24 +223,36 @@ def main():
     setup_logging(debug=args.debug)
 
     try:
-        config = load_config()
-        music_path = Path(config['music_path'])
-
         logging.info("🚀 Starting Apple Music cover art update")
-        logging.info(f"📁 Scanning: {music_path}")
 
         updated = 0
-        for root, dirs, _ in os.walk(music_path):
-            if should_exit:
-                break
-            if process_folder(root, music_path):
+        if args.input:
+            if not os.path.isdir(args.input):
+                logging.error(f"💥 Error: {args.input} is not a valid directory.")
+                sys.exit(1)
+            if process_folder(args.input):
                 updated += 1
-            for dir_name in filter(is_cd_folder, dirs):
+        else:
+            config = load_config()
+            music_path_str = args.path or config['music_path']
+            if not music_path_str:
+                logging.error("💥 Error: no music directory set. Use -p <folder> or set [paths] rootmusicdir in artwork-config.ini.")
+                sys.exit(1)
+            music_path = Path(music_path_str)
+
+            logging.info(f"📁 Scanning: {music_path}")
+
+            for root, dirs, _ in os.walk(music_path):
                 if should_exit:
                     break
-                cd_path = os.path.join(root, dir_name)
-                if process_folder(cd_path, music_path):
+                if process_folder(root, music_path):
                     updated += 1
+                for dir_name in filter(is_cd_folder, dirs):
+                    if should_exit:
+                        break
+                    cd_path = os.path.join(root, dir_name)
+                    if process_folder(cd_path, music_path):
+                        updated += 1
 
         logging.info(f"\n✅ Completed! Updated {updated} covers")
         logging.info(f"Summary:\n  - Covers updated: {updated}\n  - Log: {LOG_FILE}")
