@@ -10,8 +10,12 @@ exceptions) log to both the console and a per-script `.log` file in this directo
 
 ## Quick start
 
-1. Install the dependencies each script needs — see the individual doc in [`DOCS/`](DOCS/) for
-   exact `pip install` / `apt install` commands.
+1. Install the dependencies every script needs:
+   ```bash
+   ./install-reqs.sh
+   ```
+   Or see the individual doc in [`DOCS/`](DOCS/) for exact `pip install` / `apt install`
+   commands per script.
 2. Copy the example config and fill in your values:
    ```bash
    cp artwork-config.ini.example artwork-config.ini
@@ -38,6 +42,11 @@ exceptions) log to both the console and a per-script `.log` file in this directo
    what order.
 
 ## Scripts
+
+### Setup
+| Script | Purpose | Doc |
+|---|---|---|
+| `install-reqs.sh` | Install every Python/system package the scripts below need | [DOCS/README-install-reqs.md](DOCS/README-install-reqs.md) |
 
 ### Cover art — fetch
 | Script | Source | Doc |
