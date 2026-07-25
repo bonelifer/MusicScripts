@@ -39,6 +39,10 @@ Writes one folder path per line to `missing_covers.txt` in the current directory
 since it's a per-run report rather than project source). Any existing `missing_covers.txt` is
 overwritten. An empty file means no `CD N` subfolder is missing a cover.
 
+Prints a scan target and result count to the console on every run — `📋 N folder(s) missing a
+cover, written to missing_covers.txt` or `✅ No missing covers found.` — so a successful run is
+never silent.
+
 ## Notes
 - This only checks `CD N` subfolders, not top-level album folders. An album with no `CD`
   subfolder structure at all won't be checked or reported, even if it has no cover.

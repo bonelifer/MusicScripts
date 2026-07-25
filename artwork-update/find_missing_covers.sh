@@ -85,6 +85,8 @@ if [[ ! -d "$music_dir" ]]; then
     exit 1
 fi
 
+echo "🔍 Scanning: $music_dir"
+
 # ----------------------------------------------------------------------------
 # Scan: only "CD *" subfolders are checked; top-level album folders without
 # a CD subfolder are ignored.
@@ -102,3 +104,10 @@ find "$music_dir" -type d -name "CD *" | while read -r dir; do
         echo "$dir"
     fi
 done > "$OUTPUT_FILE"
+
+count=$(wc -l < "$OUTPUT_FILE")
+if [[ "$count" -eq 0 ]]; then
+    echo "✅ No missing covers found."
+else
+    echo "📋 $count folder(s) missing a cover, written to $OUTPUT_FILE"
+fi
