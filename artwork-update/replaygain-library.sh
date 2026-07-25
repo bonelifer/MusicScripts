@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 #
-# Script: rg-lib.sh
+# Script: replaygain-library.sh
 #
 # Description:
 #   Cache-aware wrapper around calculate_replaygain.sh for full-library
@@ -13,7 +13,7 @@
 #   calculate_replaygain.sh directly with -p pointing at the new album dir.
 #
 # Usage:
-#   rg-lib.sh [-p|--path /path/to/music] [--clear-cache] [--force] [--debug]
+#   replaygain-library.sh [-p|--path /path/to/music] [--clear-cache] [--force] [--debug]
 #
 # Options:
 #   -p, --path       Base music directory (overrides artwork-config.ini)

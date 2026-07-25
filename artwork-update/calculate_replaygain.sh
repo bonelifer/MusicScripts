@@ -12,7 +12,7 @@
 #
 #   2. Standalone / full-library use: receives a root music directory and
 #      traverses the full ARTIST/ALBUM/[CD] tree. For bulk re-processing of
-#      the entire library, prefer rg-lib.sh, which adds cache-based skipping.
+#      the entire library, prefer replaygain-library.sh, which adds cache-based skipping.
 #
 #   In both cases the entry point auto-detects whether the given path is a
 #   leaf (contains MP3s directly) or a root (requires traversal).
@@ -167,7 +167,7 @@ echo "Starting ReplayGain calculation..."
 # Typical case: called by an import/download pipeline for newly added music.
 #
 # Root directory (no MP3s at top level): traverse the full ARTIST/ALBUM/[CD]
-# tree. For cache-aware full-library runs, use rg-lib.sh instead.
+# tree. For cache-aware full-library runs, use replaygain-library.sh instead.
 if has_mp3s "$base_dir"; then
     calculate_album_gain "$base_dir"
 else

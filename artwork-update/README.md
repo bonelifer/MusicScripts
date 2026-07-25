@@ -70,7 +70,7 @@ exceptions) log to both the console and a per-script `.log` file in this directo
 | Script | Purpose | Doc |
 |---|---|---|
 | `calculate_replaygain.sh` | Apply ReplayGain tags (single album or full library) | [DOCS/README-calculate_replaygain.md](DOCS/README-calculate_replaygain.md) |
-| `rg-lib.sh` | Cache-aware full-library wrapper around `calculate_replaygain.sh` | [DOCS/README-rg-lib.md](DOCS/README-rg-lib.md) |
+| `replaygain-library.sh` | Cache-aware full-library wrapper around `calculate_replaygain.sh` | [DOCS/README-replaygain-library.md](DOCS/README-replaygain-library.md) |
 | `mp3validate.sh` | Validate/fix MP3 files with `mp3val` | [DOCS/README-mp3validate.md](DOCS/README-mp3validate.md) |
 
 ### Orchestration

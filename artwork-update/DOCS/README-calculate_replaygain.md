@@ -10,7 +10,7 @@ Two calling contexts are supported:
    pipeline) — processes just that directory.
 2. **Standalone / full-library**: called with `-p /path/to/root` or no `-p` at all (falls back
    to `rootmusicdir` in `artwork-config.ini`) — traverses the whole tree. For repeated
-   full-library runs, prefer [`rg-lib.sh`](README-rg-lib.md), which adds cache-based skipping
+   full-library runs, prefer [`replaygain-library.sh`](README-replaygain-library.md), which adds cache-based skipping
    so already-processed albums aren't re-scanned.
 
 ## Features
@@ -45,7 +45,7 @@ Two calling contexts are supported:
 - ReplayGain tags are written directly to the MP3 files (`-k` avoids clipping on tagged gain).
 - `-s i` skips files that already carry ReplayGain tags matching the target scheme.
 - For bulk re-processing of an entire library with cache-based skipping, use
-  [`rg-lib.sh`](README-rg-lib.md) instead of calling this script directly.
+  [`replaygain-library.sh`](README-replaygain-library.md) instead of calling this script directly.
 
 ## License
 

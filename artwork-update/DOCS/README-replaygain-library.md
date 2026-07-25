@@ -1,11 +1,11 @@
 # ReplayGain Full-Library Cache Wrapper
 
 ## Description
-`rg-lib.sh` is a cache-aware wrapper around [`calculate_replaygain.sh`](README-calculate_replaygain.md)
+`replaygain-library.sh` is a cache-aware wrapper around [`calculate_replaygain.sh`](README-calculate_replaygain.md)
 for full-library ReplayGain processing. It discovers every album (and CD subfolder) directory
 containing MP3s under a root music path and runs `calculate_replaygain.sh -p` on each one,
 skipping any directory already recorded in a local cache file. Use `calculate_replaygain.sh`
-directly for a single newly-imported album; use `rg-lib.sh` for (re-)processing the whole
+directly for a single newly-imported album; use `replaygain-library.sh` for (re-)processing the whole
 library efficiently.
 
 ## Features
@@ -24,10 +24,10 @@ library efficiently.
 
 ## Usage
 ```bash
-./rg-lib.sh                              # Full run against rootmusicdir from artwork-config.ini
-./rg-lib.sh -p /path/to/music            # Full run against an explicit root
-./rg-lib.sh --force                      # Re-process albums even if cached
-./rg-lib.sh --clear-cache                # Wipe the cache, then run
+./replaygain-library.sh                              # Full run against rootmusicdir from artwork-config.ini
+./replaygain-library.sh -p /path/to/music            # Full run against an explicit root
+./replaygain-library.sh --force                      # Re-process albums even if cached
+./replaygain-library.sh --clear-cache                # Wipe the cache, then run
 ```
 
 ### Command-Line Arguments

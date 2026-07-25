@@ -35,7 +35,7 @@ No arguments or flags.
   scripts in this directory currently activate one, so this script matches that existing
   convention rather than introducing a venv on its own.
 - Declining the `apt` prompt doesn't stop the script — it just leaves `mp3gain`/`mp3val`
-  uninstalled, which will only matter if you run `calculate_replaygain.sh`/`rg-lib.sh`
+  uninstalled, which will only matter if you run `calculate_replaygain.sh`/`replaygain-library.sh`
   (`mp3gain`) or `mp3validate.sh` (`mp3val`, which also offers its own install prompt the first
   time it's run).
 
