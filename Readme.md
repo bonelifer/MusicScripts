@@ -6,7 +6,7 @@ resizing album cover art, and automating MusicBrainz Picard imports.
 | Project | Purpose |
 |---|---|
 | [artwork-update](./artwork-update/README.md) | Fetches album covers from four sources, resizes/compresses them, cleans up backups and redundant copies, applies ReplayGain, and validates MP3s. |
-| [picard_album_processor](./picard_album_processor/DOCS/README-picard_album_processor.md) | Batch-runs MusicBrainz Picard against a library, tracking successes/failures and restarting Picard as needed. |
+| [picard_album_processor](./picard_album_processor/README.md) | Batch-runs MusicBrainz Picard against a library, tracking successes/failures and restarting Picard as needed. |
 
 ## Usage
 
