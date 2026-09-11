@@ -3,15 +3,18 @@
 ## Description
 `mb-cca-id3tocover.py` scans a music library for album folders, reads the artist/album from
 the first MP3's ID3 tags, and looks up matching artwork on the MusicBrainz Cover Art Archive.
-It adds `cover.jpg` when missing, or replaces it when the fetched image is larger than the
-existing one or the existing one doesn't meet the configured minimum resolution.
+It adds `cover.jpg` when missing, or replaces it when the fetched image has more pixels than
+the existing one.
 
 ## Features
-- Looks up releases via the MusicBrainz search API and fetches the release's front cover image.
+- Looks up releases via the MusicBrainz search API and fetches the release's front cover
+  image. The Cover Art Archive doesn't offer a choice of sizes, so whatever it returns is
+  already the largest this script can get.
 - Reads artist/album from the first `.mp3` file's ID3 tags (`TPE1`, `TALB`) in each folder.
 - Detects `CD 1`, `CD 2`, ... subfolders and processes each disc independently.
-- Adds `cover.jpg` if missing, replaces it only if the new image is larger or the existing one
-  is below `MIN_RES`, otherwise keeps the existing cover.
+- Adds `cover.jpg` if missing, even if it's under `MIN_RES` since there's nothing bigger to
+  try; otherwise replaces it only if the new image's pixel area is larger than the existing
+  one, keeping the existing cover in every other case.
 - Validates downloaded images (verifies they open correctly) before replacing anything.
 - Logs a one-line result per album: `↑ added`, `↑ replaced`, `✓ kept existing`, or `✗ no artwork found`.
 
@@ -64,6 +67,8 @@ timestamped in the file (`timestamp - LEVEL - message`); console lines omit the 
 - Folders with no `.mp3` files are skipped with a warning.
 - If MusicBrainz has no release match or no front cover image, the album is logged as
   `no artwork found` and left untouched.
+- If an added cover ends up under `MIN_RES`, it's kept anyway (nothing bigger was available)
+  and logged with a `⚠` warning noting the shortfall.
 
 ## License
 

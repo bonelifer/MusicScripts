@@ -6,10 +6,12 @@ and adds cover art fetched from the Last.fm `album.getinfo` API for folders that
 have any cover image.
 
 ## Features
-- Queries the Last.fm API for the album's largest listed artwork image.
+- Queries the Last.fm API for the album's largest listed artwork image, walking the API's
+  size list from the largest end so it never settles for a smaller entry by mistake.
 - Reads artist/album from the first MP3 with usable `TPE1`/`TALB` tags in each folder.
-- Skips folders that already have a `cover.jpg` — logged as "has cover" (no resolution check,
-  unlike the Deezer/MusicBrainz scripts).
+- Skips folders that already have a `cover.jpg` — logged as "has cover" (existence check only,
+  unlike the Deezer/MusicBrainz scripts, since Last.fm's own ceiling of roughly 300px never
+  reaches this project's target resolution anyway).
 - Graceful Ctrl+C handling — finishes the current folder, then stops.
 - `--debug` flag for verbose logging; `-p/--path` to override the music directory for one run;
   `-i/--input` to process a single folder directly.
@@ -20,6 +22,8 @@ have any cover image.
 - **Configuration file** (`artwork-config.ini`) with:
   - `[paths] rootmusicdir` — root of your music library, unless `-p`/`-i` is always used instead
   - `[lastfm] API_KEY` — your Last.fm API key (required even in `-i` mode)
+  - `[settings] MIN_RES` — optional, defaults to `500`; used only to flag a below-floor result
+    in the log, since Last.fm never offers anything larger to fall back on
 
 ## Installation
 1. Install Python 3.
@@ -61,9 +65,11 @@ timestamped in the file; console lines omit the timestamp. A short plain-`print(
 
 ## Notes
 - Folders with no readable artist/album metadata are skipped (logged at debug level only).
-- Because there's no resolution check, this script won't upgrade a low-resolution existing
-  cover — it only fills in albums that have none. Run `mb-cca-id3tocover.py` or
-  `deezer-id3tocover.py` first/after if you also want resolution-based upgrades.
+- This script won't upgrade a low-resolution existing cover — it only fills in albums that
+  have none. Run `mb-cca-id3tocover.py` or `deezer-id3tocover.py` first/after if you also
+  want resolution-based upgrades.
+- A newly added cover under `MIN_RES` is kept anyway and logged with a `⚠` warning, since
+  Last.fm has nothing bigger to offer.
 
 ## License
 

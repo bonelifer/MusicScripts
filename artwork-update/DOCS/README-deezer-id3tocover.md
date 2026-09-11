@@ -3,14 +3,21 @@
 ## Description
 `deezer-id3tocover.py` walks a music library, reads artist/album from each folder's ID3 tags,
 and fetches high-resolution square JPEG artwork from the Deezer API. It only touches folders
-that don't already have a cover meeting `MIN_RES`.
+that don't already have a cover at or above its 1400px target resolution.
 
 ## Features
-- Queries the public Deezer search API (`api.deezer.com/search/album`) for cover artwork.
+- Queries the public Deezer search API (`api.deezer.com/search/album`) for cover artwork, then
+  requests it at 1400px by rewriting the size segment of the returned CDN URL. Deezer stores
+  most covers at up to that resolution, even though the API only documents `cover_xl` (~1000px).
+  Falls back to the API's own URL, unedited, if the rewritten request fails.
 - Reads artist/album via `mutagen.easyid3` from the first MP3 with usable tags in each folder.
 - Detects `CD`/`Disc`/`Disk` subfolders and processes them alongside the parent album folder.
-- Validates downloaded images: must be JPEG/JFIF, square, and at least `MIN_RES` on each side.
-- Skips folders that already have a `cover.jpg` meeting `MIN_RES` — logged as "has good cover".
+- Validates downloaded images: must be JPEG/JFIF and square. `MIN_RES` is a floor, not a
+  rejection threshold: it only decides whether a same-or-smaller download is worth replacing
+  the existing cover with; the best image a folder ends up with is never discarded just for
+  being small.
+- Skips folders that already have a `cover.jpg` at or above the 1400px target (logged as
+  "has good cover").
 - Graceful Ctrl+C handling — finishes the current folder, then stops.
 - `--debug` flag for verbose logging; `-p/--path` to override the music directory for one run;
   `-i/--input` to process a single folder directly.
@@ -20,8 +27,10 @@ that don't already have a cover meeting `MIN_RES`.
 - **External libraries**: `mutagen`, `Pillow`, `requests`
 - **Configuration file** (`artwork-config.ini`) with:
   - `[paths] rootmusicdir` — root of your music library, unless `-p`/`-i` is always used instead
-  - `[settings] MIN_RES` — minimum acceptable width/height, in pixels (required, no fallback —
-    still required even in `-i` mode, since it's not something `-i`/`-p` can override)
+  - `[settings] MIN_RES` — fallback floor, in pixels, used only when nothing bigger turned up
+    for a folder (required, no fallback — still required even in `-i` mode, since it's not
+    something `-i`/`-p` can override). The actual resolution the script aims for is a fixed
+    1400px, hardcoded as `TARGET_RES` in the script.
 
 ## Installation
 1. Install Python 3.
@@ -64,6 +73,8 @@ timestamped in the file; console lines omit the timestamp. A short plain-`print(
 ## Notes
 - Folders with no readable artist/album metadata are skipped (logged at debug level only).
 - If no Deezer match is found, the folder is skipped (logged at debug level only).
+- If the best image Deezer has for an album is still under `MIN_RES`, it's saved anyway (there's
+  nothing bigger to get) and logged with a `⚠` warning noting the shortfall.
 
 ## License
 
