@@ -157,6 +157,12 @@ def meets_resolution(image_path, min_res):
         logger.warning(f"Error checking image resolution: {e}")
         return False
 
+def pixel_count(size):
+    """size is a (width, height) tuple; comparing tuples directly compares
+    width first then height, not actual pixel area, so callers needing a
+    genuine bigger-or-smaller comparison should use this instead."""
+    return size[0] * size[1]
+
 def process_folder(folder_path):
     try:
         cover_path = os.path.join(folder_path, "cover.jpg")
@@ -176,11 +182,15 @@ def process_folder(folder_path):
                 try:
                     if not os.path.exists(cover_path):
                         shutil.move(temp_artwork_path, cover_path)
+                        if not meets_resolution(cover_path, MIN_RES):
+                            with Image.open(cover_path) as img:
+                                logger.info(f"⚠ {artist} - {album} ({img.width}x{img.height}, below the {MIN_RES}px floor -- nothing bigger was available)")
                         logger.info(f"↑ {artist} - {album} (added cover)")
                     else:
                         try:
                             with Image.open(cover_path) as existing_image, Image.open(temp_artwork_path) as downloaded_image:
-                                if downloaded_image.size > existing_image.size or not meets_resolution(cover_path, MIN_RES):
+                                # Compare actual pixel area, not tuple order (width, height)
+                                if pixel_count(downloaded_image.size) > pixel_count(existing_image.size):
                                     shutil.move(temp_artwork_path, cover_path)
                                     logger.info(f"↑ {artist} - {album} (replaced cover)")
                                 else:

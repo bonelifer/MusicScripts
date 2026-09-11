@@ -28,6 +28,7 @@ import logging
 import argparse
 import configparser
 import requests
+from PIL import Image, UnidentifiedImageError
 from mutagen.id3 import ID3, error as ID3Error
 from pathlib import Path
 from requests.exceptions import RequestException, Timeout
@@ -81,7 +82,10 @@ def load_config():
     try:
         settings = {
             'music_path': config.get("paths", "rootmusicdir", fallback=None),
-            'api_key': config.get("lastfm", "API_KEY")
+            'api_key': config.get("lastfm", "API_KEY"),
+            # Last.fm's largest image size (~300px) is well below this floor
+            # in practice; kept only so a below-floor download can be logged.
+            'min_res': config.getint("settings", "MIN_RES", fallback=500)
         }
         return settings
 
@@ -136,7 +140,10 @@ def has_any_cover(folder):
 
 def fetch_lastfm_artwork(artist, album, api_key):
     """
-    Query Last.fm API for album artwork.
+    Query Last.fm API for album artwork, returning the largest size Last.fm
+    offers for it. Last.fm's own ceiling here (typically ~300px) sits well
+    below this project's target resolution, so there's nothing bigger to
+    request -- this just makes sure the biggest of what's available is used.
 
     Args:
         artist (str): Artist name
@@ -154,7 +161,14 @@ def fetch_lastfm_artwork(artist, album, api_key):
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-        return data['album']['image'][3]['#text']  # 3 is the large image size
+        images = data['album']['image']
+        # Sizes are listed smallest-to-largest (..., extralarge, mega, and
+        # sometimes a trailing entry with no size name); walk backwards for
+        # the first one that actually has a URL.
+        for image in reversed(images):
+            if image.get('#text'):
+                return image['#text']
+        return None
     except (RequestException, Timeout, KeyError, ValueError) as e:
         logging.debug(f"API error for {artist} - {album}: {str(e)}")
         return None
@@ -195,7 +209,7 @@ def safe_save_image(image_url, save_path):
             os.remove(temp_path)
         return False
 
-def process_folder(folder, root_path, api_key):
+def process_folder(folder, root_path, api_key, min_res):
     """
     Process a folder to add missing album cover art.
 
@@ -205,6 +219,9 @@ def process_folder(folder, root_path, api_key):
             starting point, skipped so it isn't treated as an album itself).
             Pass None (as -i mode does) to process folder unconditionally.
         api_key (str): Last.fm API key
+        min_res (int): Floor used only to flag a below-floor result; never
+            blocks accepting Last.fm's artwork, since it's the only option
+            this source offers
 
     Returns:
         bool: True if artwork was added
@@ -241,6 +258,15 @@ def process_folder(folder, root_path, api_key):
 
         save_path = os.path.join(folder, 'cover.jpg')
         if safe_save_image(artwork_url, save_path):
+            try:
+                with Image.open(save_path) as img:
+                    if img.width < min_res or img.height < min_res:
+                        logging.info(
+                            f"⚠ {artist} - {album} ({img.width}x{img.height}, below the "
+                            f"{min_res}px floor -- Last.fm doesn't offer anything bigger)"
+                        )
+            except (UnidentifiedImageError, IOError):
+                pass
             logging.info(f"↑ {artist} - {album} (added cover)")
             return True
 
@@ -273,6 +299,7 @@ def main():
         # Read settings
         config = load_config()
         api_key = config['api_key']
+        min_res = config['min_res']
 
         logging.info(f"🚀 Starting Last.fm cover art update")
 
@@ -282,7 +309,7 @@ def main():
                 logging.critical(f"💥 Fatal error: {args.input} is not a valid directory.")
                 sys.exit(1)
             scanned = args.input
-            if process_folder(args.input, None, api_key):
+            if process_folder(args.input, None, api_key, min_res):
                 updated += 1
         else:
             music_path_str = args.path or config['music_path']
@@ -303,7 +330,7 @@ def main():
                 if should_exit:
                     break
 
-                if process_folder(root, music_path, api_key):
+                if process_folder(root, music_path, api_key, min_res):
                     updated += 1
 
         # Final log

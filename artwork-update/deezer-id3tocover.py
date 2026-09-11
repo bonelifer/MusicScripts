@@ -15,7 +15,9 @@ Key Features:
 
 Configuration:
 - [paths] rootmusicdir = /path/to/music
-- [settings] MIN_RES = 500  (minimum acceptable resolution for artwork)
+- [settings] MIN_RES = 500  (fallback floor -- only relevant if nothing
+  bigger is available; see TARGET_RES for the resolution this script
+  actually aims for)
 
 Usage:
     python3 deezer-id3tocover.py
@@ -27,6 +29,7 @@ Log Output:
 """
 
 import os
+import re
 import sys
 import signal
 import logging
@@ -46,6 +49,10 @@ LOG_FILE = "cover_updater.log"
 DEEZER_API_URL = "https://api.deezer.com/search/album"
 CD_PREFIXES = ('cd', 'disc', 'disk')  # Common disc subfolder prefixes
 VALID_COVER_NAMES = ['cover.jpg']     # Recognized cover image filenames
+# Deezer's API only documents cover_xl (~1000px), but its CDN quietly
+# stores most covers up to 1400px and serves that actual image (never an
+# error) when a larger size is requested in the URL than is available.
+TARGET_RES = 1400
 
 # Global exit flag for safe shutdown
 should_exit = False
@@ -152,13 +159,17 @@ def has_mp3s(folder):
         logging.warning(f"Permission denied accessing {folder}")
         return False
 
-def validate_image(image_data, min_res):
+def validate_image(image_data):
     """
-    Verify image is a square JPEG and meets minimum resolution.
+    Verify image is a valid square JPEG.
+
+    Resolution is intentionally not checked here: a download is never
+    rejected outright for being small, since it may be the best a source
+    can offer. See safe_save_image() for how MIN_RES factors into whether
+    a downloaded candidate is worth keeping over an existing cover.
 
     Args:
         image_data (bytes): Raw image content
-        min_res (int): Minimum resolution required (width and height)
 
     Returns:
         bool: True if image passes validation
@@ -168,29 +179,30 @@ def validate_image(image_data, min_res):
             if img.format not in ('JPEG', 'JFIF'):
                 return False
             width, height = img.size
-            return width >= min_res and height >= min_res and width == height
+            return width == height
     except (UnidentifiedImageError, IOError, SyntaxError):
         return False
 
-def get_existing_cover(folder, min_res):
+def get_existing_cover(folder, target_res):
     """
-    Check for an existing high-quality cover.jpg file.
+    Check for an existing cover.jpg that already meets the target
+    resolution, so it can be left alone instead of re-fetched.
 
     Args:
         folder (str): Folder to check
-        min_res (int): Minimum resolution
+        target_res (int): Resolution a cover must meet to be left alone
 
     Returns:
-        str or None: Path to valid cover if found
+        str or None: Path to a cover that already meets target_res
     """
     for name in VALID_COVER_NAMES:
         path = os.path.join(folder, name)
         if os.path.exists(path):
             try:
                 with Image.open(path) as img:
-                    if (img.format in ('JPEG', 'JFIF') and 
-                        img.width >= min_res and 
-                        img.height >= min_res):
+                    if (img.format in ('JPEG', 'JFIF') and
+                        img.width >= target_res and
+                        img.height >= target_res):
                         return path
             except (UnidentifiedImageError, IOError):
                 continue
@@ -209,19 +221,34 @@ def has_any_cover(folder):
     return any(os.path.exists(os.path.join(folder, name)) 
                for name in VALID_COVER_NAMES)
 
+def build_upsized_url(cover_url, target_res):
+    """
+    Rewrite a Deezer cover URL's size segment to request target_res.
+
+    Args:
+        cover_url (str): A cover_xl/cover_big URL, e.g. containing "1000x1000"
+        target_res (int): Requested width/height in pixels
+
+    Returns:
+        str: The rewritten URL, or cover_url unchanged if no size segment
+            was found to rewrite
+    """
+    return re.sub(r'\d+x\d+(?=[-.])', f'{target_res}x{target_res}', cover_url, count=1)
+
 def fetch_deezer_artwork(artist, album):
     """
-    Query Deezer API for high-res album artwork.
+    Query Deezer API for album artwork, returning candidate URLs to try in
+    priority order (largest requested size first).
 
     Args:
         artist (str): Artist name
         album (str): Album title
 
     Returns:
-        str or None: URL of the artwork
+        list[str]: Candidate URLs, largest-first; empty if none found
     """
     if should_exit:
-        return None
+        return []
 
     try:
         response = requests.get(
@@ -231,56 +258,97 @@ def fetch_deezer_artwork(artist, album):
         )
         response.raise_for_status()
         data = response.json()
-        if data.get('data'):
-            return data['data'][0].get('cover_xl') or data['data'][0].get('cover_big')
+        if not data.get('data'):
+            return []
+        cover_url = data['data'][0].get('cover_xl') or data['data'][0].get('cover_big')
+        if not cover_url:
+            return []
+
+        candidates = []
+        upsized_url = build_upsized_url(cover_url, TARGET_RES)
+        if upsized_url != cover_url:
+            candidates.append(upsized_url)
+        candidates.append(cover_url)
+        return candidates
     except (RequestException, Timeout, ValueError) as e:
         logging.debug(f"API error for {artist} - {album}: {str(e)}")
-        return None
+        return []
 
-def safe_save_image(image_url, save_path, min_res):
+def safe_save_image(candidates, save_path, min_res, existing_res=(0, 0)):
     """
-    Download and safely save a validated image from a URL.
+    Try each candidate URL (largest first) and save the first one that
+    downloads and validates.
+
+    A candidate is never rejected purely for being smaller than min_res --
+    it may be the best a source can offer. It IS rejected if it's smaller
+    than the cover already on disk, unless that existing cover is itself
+    below min_res (in which case any valid replacement is an improvement).
 
     Args:
-        image_url (str): URL of the image
+        candidates (list[str]): Candidate image URLs, largest-first
         save_path (str): Target file path
-        min_res (int): Minimum resolution required
+        min_res (int): Floor below which an existing cover is always worth
+            replacing, even by a same-or-smaller candidate
+        existing_res (tuple[int, int]): Width/height of the current
+            cover.jpg, or (0, 0) if there isn't one
 
     Returns:
-        bool: True on successful save and validation
+        bool: True on successful save
     """
     if should_exit:
         return False
 
     temp_path = f"{save_path}.tmp"
-    try:
-        # Fetch image
-        response = requests.get(image_url, stream=True, timeout=15)
-        response.raise_for_status()
+    for image_url in candidates:
+        if should_exit:
+            return False
+        try:
+            response = requests.get(image_url, stream=True, timeout=15)
+            response.raise_for_status()
 
-        # Write to temporary file
-        with open(temp_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if should_exit:
-                    raise KeyboardInterrupt()
-                f.write(chunk)
+            with open(temp_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if should_exit:
+                        raise KeyboardInterrupt()
+                    f.write(chunk)
 
-        # Validate the image
-        with open(temp_path, 'rb') as f:
-            if not validate_image(f.read(), min_res):
+            with open(temp_path, 'rb') as f:
+                image_data = f.read()
+            if not validate_image(image_data):
                 raise ValueError("Image failed validation")
 
-        # Replace existing file if needed
-        if os.path.exists(save_path):
-            os.remove(save_path)
-        os.rename(temp_path, save_path)
-        return True
+            with Image.open(BytesIO(image_data)) as img:
+                new_res = img.size
 
-    except Exception as e:
-        logging.warning(f"Download failed: {str(e)}")
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
-        return False
+            existing_pixels = existing_res[0] * existing_res[1]
+            new_pixels = new_res[0] * new_res[1]
+            existing_below_floor = existing_pixels and min(existing_res) < min_res
+            if existing_pixels and new_pixels < existing_pixels and not existing_below_floor:
+                logging.debug(
+                    f"Candidate {new_res[0]}x{new_res[1]} is smaller than existing "
+                    f"{existing_res[0]}x{existing_res[1]}; keeping existing cover"
+                )
+                os.remove(temp_path)
+                return False
+
+            if new_pixels < min_res * min_res:
+                logging.info(
+                    f"⚠ Best available is {new_res[0]}x{new_res[1]}, below the {min_res}px floor"
+                )
+
+            if os.path.exists(save_path):
+                os.remove(save_path)
+            os.rename(temp_path, save_path)
+            return True
+
+        except Exception as e:
+            logging.debug(f"Candidate failed ({image_url}): {str(e)}")
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            continue
+
+    logging.warning("All artwork candidates failed download or validation")
+    return False
 
 def process_folder(folder, root_path, min_res):
     """
@@ -310,21 +378,30 @@ def process_folder(folder, root_path, min_res):
             logging.debug(f"No metadata in {os.path.basename(folder)}")
             return False
 
-        # Skip if cover is already valid
-        existing_cover = get_existing_cover(folder, min_res)
+        # Skip if cover already meets the target resolution
+        existing_cover = get_existing_cover(folder, TARGET_RES)
         if existing_cover:
             logging.info(f"✓ {artist} - {album} (has good cover)")
             return False
 
-        # Attempt to fetch and save new artwork
-        artwork_url = fetch_deezer_artwork(artist, album)
-        if not artwork_url:
+        # Attempt to fetch a better candidate and compare against whatever exists
+        candidates = fetch_deezer_artwork(artist, album)
+        if not candidates:
             logging.debug(f"No artwork for {artist} - {album}")
             return False
 
         save_path = os.path.join(folder, 'cover.jpg')
-        if safe_save_image(artwork_url, save_path, min_res):
-            action = "upgraded" if has_any_cover(folder) else "added"
+        had_cover = has_any_cover(folder)
+        existing_res = (0, 0)
+        if had_cover:
+            try:
+                with Image.open(save_path) as img:
+                    existing_res = img.size
+            except (UnidentifiedImageError, IOError):
+                pass
+
+        if safe_save_image(candidates, save_path, min_res, existing_res):
+            action = "upgraded" if had_cover else "added"
             logging.info(f"↑ {artist} - {album} ({action} cover)")
             return True
 
@@ -358,7 +435,7 @@ def main():
         config = load_config()
         min_res = config['min_res']
 
-        logging.info(f"🚀 Starting Deezer cover art update (min {min_res}px)")
+        logging.info(f"🚀 Starting Deezer cover art update (target {TARGET_RES}px, floor {min_res}px)")
 
         updated = 0
         if args.input:
