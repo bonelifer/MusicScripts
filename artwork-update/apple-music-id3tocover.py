@@ -22,6 +22,10 @@ LOG_FILE = "apple-music-artwork.log"
 CD_PREFIXES = ('cd', 'disc', 'disk')
 REQUEST_TIMEOUT = 15  # seconds
 MIN_FILE_SIZE = 50 * 1024  # 50KB minimum
+# itunespy's get_artwork_url() returns the actual largest stored artwork
+# (never an error) when the requested size exceeds what's available, so an
+# oversized value here always gets the true maximum resolution.
+ARTWORK_REQUEST_SIZE = 10000
 
 # Global flag for graceful shutdown
 should_exit = False
@@ -107,20 +111,19 @@ def get_image_resolution(image_path):
         return (0, 0)
 
 def fetch_apple_music_artwork(artist, album):
-    """Get artwork URL and resolution from Apple Music"""
+    """Get the largest available artwork URL from Apple Music"""
     if should_exit:
-        return None, (0, 0)
+        return None
     try:
         results = itunespy.search_album(f"{artist} {album}")
         for result in results:
             if result.artist_name.lower() == artist.lower():
-                url = result.artwork_url_100.replace("100x100bb.jpg", "1200x1200bb.jpg")
-                return url, (1200, 1200)
+                return result.get_artwork_url(size=ARTWORK_REQUEST_SIZE)
     except Exception as e:
         logging.debug(f"API error: {str(e)}")
-    return None, (0, 0)
+    return None
 
-def download_cover(artwork_url, save_path, expected_res=(1200,1200)):
+def download_cover(artwork_url, save_path):
     """Download and save cover image with resolution validation"""
     if should_exit:
         return False
@@ -190,16 +193,16 @@ def process_folder(folder, root_path=None):
         return False
 
     cover_path = os.path.join(folder, 'cover.jpg')
-    artwork_url, artwork_res = fetch_apple_music_artwork(artist, album)
-    
+    artwork_url = fetch_apple_music_artwork(artist, album)
+
     if not artwork_url:
         logging.info(f"❌ No artwork found for: {artist} - {album}")
         return False
-    
+
     existing_cover = os.path.exists(cover_path)
     existing_res = get_image_resolution(cover_path) if existing_cover else (0, 0)
-    
-    if download_cover(artwork_url, cover_path, artwork_res):
+
+    if download_cover(artwork_url, cover_path):
         with Image.open(cover_path) as img:
             new_res = img.size
         
