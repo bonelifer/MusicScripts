@@ -7,7 +7,10 @@ It adds `cover.jpg` when missing and upgrades it when the fetched image is meani
 than the existing one.
 
 ## Features
-- Searches iTunes for the album and requests the `1200x1200` artwork variant.
+- Searches iTunes for the album and requests the largest artwork Apple has for it, via
+  `itunespy`'s `get_artwork_url()`. When the requested size exceeds what's available, Apple's
+  CDN just returns the largest image it actually has stored instead of erroring, so this isn't
+  capped at a fixed resolution like 1200px.
 - Reads artist/album from the first `.mp3` with usable `TPE1`/`TALB` tags in each folder.
 - Detects `CD`/`Disc`/`Disk` subfolders and processes them alongside the parent album folder.
 - Only replaces an existing cover if the new image has at least 10% more pixels.
